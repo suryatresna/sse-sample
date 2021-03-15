@@ -82,7 +82,8 @@ func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 
 		// Write to the ResponseWriter
 		// Server Sent Events compatible
-		fmt.Printf("%s", <-messageChan)
+		// fmt.Printf("%s", <-messageChan)
+		fmt.Fprintf(rw, "%s", <-messageChan)
 
 		// Flush the data immediatly instead of buffering it for later.
 		flusher.Flush()
@@ -125,7 +126,7 @@ func main() {
 		for {
 			time.Sleep(time.Second * 2)
 			resp := NewResponse("Test Hello World")
-			eventString, err := resp.ParseJSONtoString()
+			eventString, err := resp.OutputEventMessage()
 			if err != nil {
 				log.Println("[ERROR] Receiving event")
 			}
@@ -150,12 +151,14 @@ func NewResponse(message string) *Response {
 	}
 }
 
-func (r *Response) ParseJSONtoString() (string, error) {
+func (r *Response) OutputEventMessage() (string, error) {
 
 	b, err := json.Marshal(r)
 	if err != nil {
 		return "", err
 	}
 
-	return string(b), nil
+	output := fmt.Sprintf("event: message\ndata: %s\n\n", string(b))
+
+	return output, nil
 }
