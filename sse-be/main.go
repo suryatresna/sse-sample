@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -41,7 +43,7 @@ func NewServer() (broker *Broker) {
 	return
 }
 
-func (broker *Broker) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
+func (broker *Broker) SentEventHandler(rw http.ResponseWriter, req *http.Request) {
 
 	// Make sure that the writer supports flushing.
 	//
@@ -118,36 +120,59 @@ func (broker *Broker) listen() {
 
 }
 
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.NotFound(w, r)
+		return
+	}
+	fmt.Fprint(w, "Hello, World!")
+}
+
 func main() {
 
 	broker := NewServer()
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+		log.Printf("Defaulting to port %s", port)
+	}
+
 	go func() {
 		for {
 			time.Sleep(time.Second * 2)
-			resp := NewResponse("Test Hello World")
+			resp := ListenEventResponse()
 			eventString, err := resp.OutputEventMessage()
 			if err != nil {
 				log.Println("[ERROR] Receiving event")
 			}
-			log.Println("Receiving event: ", eventString)
+			// log.Println("Receiving event: ", eventString)
 			broker.Notifier <- []byte(eventString)
 		}
 	}()
 
-	log.Fatal("HTTP server error: ", http.ListenAndServe("localhost:3000", broker))
+	http.HandleFunc("/sse", broker.SentEventHandler)
+	http.HandleFunc("/", indexHandler)
+
+	log.Fatal("HTTP server error: ", http.ListenAndServe("0.0.0.0:"+port, nil))
 
 }
 
 type Response struct {
-	Data      string `json:"data"`
-	Timestamp string `json:"timestamp"`
+	Message     string `json:"message"`
+	MagicNumber int    `json:"magic_number"`
+	Timestamp   string `json:"timestamp"`
 }
 
-func NewResponse(message string) *Response {
+func ListenEventResponse() *Response {
+
+	dicts := []string{"Hello World", "Lorem Ipsum", "Jakarta", "Surabaya", "Tidal", "Nova", "Alfa", "Mike", "Foxtrot", "Audios"}
+	dictRand := dicts[rand.Intn(len(dicts))]
+
 	return &Response{
-		Data:      message,
-		Timestamp: time.Now().String(),
+		Message:     dictRand,
+		MagicNumber: rand.Intn(1000),
+		Timestamp:   time.Now().String(),
 	}
 }
 
