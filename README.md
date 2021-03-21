@@ -1,3 +1,3 @@
 # Sample Project  SSE
 
-SSE is  Server Sent Event.
+SSE is a Server-Sent Event.
