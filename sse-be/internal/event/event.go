@@ -17,8 +17,9 @@ type EventMessageInterface interface {
 }
 
 type Event struct {
-	broker brokerInterface
-	events map[string]EventMessageInterface
+	broker       brokerInterface
+	events       map[string]EventMessageInterface
+	modSequences []string
 }
 
 func EventListener(broker brokerInterface, events map[string]EventMessageInterface) *Event {
@@ -28,13 +29,17 @@ func EventListener(broker brokerInterface, events map[string]EventMessageInterfa
 	}
 }
 
+func (e *Event) SetModuleSequences(mods []string) {
+	e.modSequences = mods
+}
+
 func (e *Event) Listen() {
 	var (
 		i         int = 1
 		idEvent   int = 0
 		postIDRnd int = 0
 		// module sequence
-		modulesSeq []string = []string{"post", "like", "like", "like"}
+		modulesSeq []string = e.modSequences
 	)
 	for {
 		if mod, ok := e.events[modulesSeq[i]]; ok {
@@ -76,6 +81,6 @@ func (e *Event) eventJSONMessage(idEvent int, name string, rsp interface{}) (str
 		return "", err
 	}
 
-	output := fmt.Sprintf("id: %d\nevent: %s\ndata: %s\n\n", idEvent, name, string(b))
+	output := fmt.Sprintf("id: %d\nevent: %s\ndata: %s\nretry: %d\n\n", idEvent, name, string(b), 100)
 	return output, nil
 }
