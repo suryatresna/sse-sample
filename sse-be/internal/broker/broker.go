@@ -50,7 +50,9 @@ func (broker *Broker) SentEventHandler(rw http.ResponseWriter, req *http.Request
 	rw.Header().Set("Content-Type", "text/event-stream")
 	rw.Header().Set("Cache-Control", "no-cache")
 	rw.Header().Set("Connection", "keep-alive")
-	rw.Header().Set("Access-Control-Allow-Origin", "*")
+	rw.Header().Set("Access-Control-Allow-Origin", req.Header.Get("Origin"))
+	rw.Header().Set("Access-Control-Allow-Credentials", "true")
+	rw.Header().Set("X-Accel-Buffering", "no")
 
 	// Each connection registers its own message channel with the Broker's connections registry
 	messageChan := make(chan []byte)

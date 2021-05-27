@@ -54,6 +54,11 @@ func (e *Event) Listen() {
 			if modulesSeq[i] == "post" {
 				postIDRnd = rand.Intn(1090)
 			}
+
+			if modulesSeq[i] == "channel" {
+				postIDRnd = rand.Intn(1090)
+			}
+
 			// get response from module event
 			eventResp, err := mod.GetResponse(postIDRnd)
 			if err != nil {

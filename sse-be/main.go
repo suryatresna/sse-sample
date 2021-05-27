@@ -9,9 +9,8 @@ import (
 
 	"github.com/suryatresna/sse-sample/sse-be/internal/broker"
 	"github.com/suryatresna/sse-sample/sse-be/internal/event"
-	"github.com/suryatresna/sse-sample/sse-be/internal/event/comment"
-	"github.com/suryatresna/sse-sample/sse-be/internal/event/like"
-	"github.com/suryatresna/sse-sample/sse-be/internal/event/post"
+	"github.com/suryatresna/sse-sample/sse-be/internal/event/channel"
+	"github.com/suryatresna/sse-sample/sse-be/internal/event/views"
 )
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -25,12 +24,15 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 
 	listMods := map[string]event.EventMessageInterface{
-		"post":    post.NewEvent(time.Second * 5),
-		"like":    like.NewEvent(time.Second * 2),
-		"comment": comment.NewEvent(time.Second * 2),
+		// "post":    post.NewEvent(time.Second * 5),
+		// "like":    like.NewEvent(time.Second * 2),
+		// "comment": comment.NewEvent(time.Second * 2),
+		"channel": channel.NewEvent(time.Second * 5),
+		"views":   views.NewEvent(time.Second * 3),
 	}
 
-	sequenceMods := []string{"post", "like", "like", "like", "comment"}
+	// sequenceMods := []string{"post", "like", "like", "like", "comment"}
+	sequenceMods := []string{"channel", "views", "views", "views"}
 
 	brokerSrv := broker.NewServer()
 	eventSrv := event.EventListener(brokerSrv, listMods)
@@ -45,8 +47,9 @@ func main() {
 
 	go eventSrv.Listen()
 
-	http.HandleFunc("/sse", brokerSrv.SentEventHandler)
+	http.HandleFunc("/feeds-sse", brokerSrv.SentEventHandler)
 	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/health", indexHandler)
 
 	log.Fatal("HTTP server error: ", http.ListenAndServe("0.0.0.0:"+port, nil))
 

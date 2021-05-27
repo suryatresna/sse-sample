@@ -6,7 +6,11 @@ COPY . .
 
 RUN go build -ldflags "-linkmode external -extldflags -static" -a main.go
 
-FROM scratch
+FROM ubuntu
+
+RUN apt-get update && apt install -y net-tools iproute2 tcpdump
+
 COPY --from=0 /go/src/github.com/suryatresna/sse-sample/sse-be/main /main
+
 
 CMD ["/main"]
